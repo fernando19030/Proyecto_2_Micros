@@ -1,4 +1,4 @@
-// Archivo:  Lab09.c
+// Archivo:  Proyecto_2.c
 // Dispositivo:	PIC16F887
 // Autor:    Fernando Arribas
 // Compilador:	pic-as (v2.31), MPLABX V5.45
@@ -7,8 +7,8 @@
 //           2 servos con PWM
 // Hardware: 2 servos en PORTC y 2 potenciometros en PORTA 
 //
-// Creado: 27 abr, 2021
-// Ultima modificacion: 30 abr, 2021
+// Creado: 25 may, 2021
+// Ultima modificacion: 25 may, 2021
 
 // PIC16F887 Configuration Bit Settings
 
@@ -24,7 +24,7 @@
 #pragma config BOREN = OFF      // Brown Out Reset Selection bits (BOR disabled)
 #pragma config IESO = OFF       // Internal External Switchover bit (Internal/External Switchover mode is disabled)
 #pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is disabled)
-#pragma config LVP = ON         // Low Voltage Programming Enable bit (RB3/PGM pin has PGM function, low voltage programming enabled)
+#pragma config LVP = OFF         // Low Voltage Programming Enable bit (RB3/PGM pin has PGM function, low voltage programming enabled)
 
 // CONFIG2
 #pragma config BOR4V = BOR40V   // Brown-out Reset Selection bit (Brown-out Reset set to 4.0V)
@@ -45,7 +45,8 @@
 //******************************************************************************
 // Variables
 //******************************************************************************
-
+int speed;
+int counter;
 //******************************************************************************
 // Prototipos de funciones
 //******************************************************************************
@@ -63,13 +64,26 @@ void __interrupt() isr(void)
             CCP1CONbits.DC1B0 = (ADRESH >> 7);
         }
         
-        else {
+        else if (ADCON0bits.CHS == 1) {
             CCPR2L = (ADRESH>>1) + 125;
             CCP2CONbits.DC2B1 = ADRESH & 0b01;
             CCP2CONbits.DC2B0 = (ADRESH >> 7);
         }
+        
+        else if (ADCON0bits.CHS == 2) {
+            speed = ADRESH; 
+            
+        }
         PIR1bits.ADIF = 0;          //Reiniciamos la interupcion
     }
+    
+    if (INTCONbits.T0IF ==1) // timer 0 interrupt flag
+    {
+        counter++;
+//        PORTDbits.RD0 = ~PORTDbits.RD0;      // Toggle PORTB bit0 LED
+        INTCONbits.T0IF = 0;         // clear the flag
+        TMR0 = 131;           // reset the timer preset count
+  }
     
 }
 
@@ -92,13 +106,31 @@ void main(void) {
             if (ADCON0bits.CHS == 0) {  //Verificamos cual fue el ultimo canal convertido
                 ADCON0bits.CHS = 1;     //Despues cambiamos al siguiente canal
             }
-            else {
+            else if (ADCON0bits.CHS == 1) {
+                ADCON0bits.CHS = 2;
+            }
+            else if (ADCON0bits.CHS == 2) {
                 ADCON0bits.CHS = 0;
             }
             
             __delay_us(200);            //Esperamos un tiempo para que la conversion
             ADCON0bits.GO = 1;          //termine correctamente
         } 
+        
+        if (counter >= speed) {
+            PORTDbits.RD0 = 0;
+            PORTDbits.RD1 = 0;
+        }
+        
+        else {
+            PORTDbits.RD0 = 1;
+            PORTDbits.RD1 = 1;
+        }
+        
+        if (counter == 256) {
+            counter = 0;
+        }
+        
     }
 
     return;
@@ -110,12 +142,15 @@ void main(void) {
 
 void setup(void) {
     //Configuracion de los puertos
-    ANSEL   = 0X03;       //Colocamos RA0 y RA1 como entradas analogicas
+    ANSEL   = 0X07;       //Colocamos RA0 y RA1 como entradas analogicas
     ANSELH  = 0X00;       
     
-    TRISA   = 0X03;       //Colocamos RA0 y RA1 como entradas y el resto del
+    TRISA   = 0X07;       //Colocamos RA0 y RA1 como entradas y el resto del
+    TRISD   = 0X00;
 
     PORTA   = 0x00;
+    PORTD   = 0x00;
+    
     //Configuracion del Oscilador
     OSCCONbits.IRCF2 = 1;       //Reloj interno de 8MHz
     OSCCONbits.IRCF1 = 1;
@@ -125,9 +160,22 @@ void setup(void) {
     //Configuracion Interupciones
     INTCONbits.GIE   = 1;       //Activamos las interupciones ADC 
     INTCONbits.PEIE  = 1;
+    INTCONbits.T0IE  = 1;
     PIE1bits.ADIE    = 1;
     
     PIR1bits.ADIF    = 0;
+    INTCONbits.T0IF  = 0;
+    
+    //Configuracion TMR0
+    //Timer0 Registers Prescaler= 64 - TMR0 Preset = 131 - Freq = 250.00 Hz - Period = 0.004000 seconds
+    OPTION_REGbits.T0CS = 0;  // bit 5  TMR0 Clock Source Select bit...0 = Internal Clock (CLKO) 1 = Transition on T0CKI pin
+    OPTION_REGbits.T0SE = 0;  // bit 4 TMR0 Source Edge Select bit 0 = low/high 1 = high/low
+    OPTION_REGbits.PSA = 0;   // bit 3  Prescaler Assignment bit...0 = Prescaler is assigned to the Timer0
+    OPTION_REGbits.PS2 = 1;   // bits 2-0  PS2:PS0: Prescaler Rate Select bits
+    OPTION_REGbits.PS1 = 0;
+    OPTION_REGbits.PS0 = 1;
+    TMR0 = 131;             // preset for timer register
+
     
     //Configuracion ADC
     ADCON1bits.ADFM     = 0;    //Justificado a la izquierda
