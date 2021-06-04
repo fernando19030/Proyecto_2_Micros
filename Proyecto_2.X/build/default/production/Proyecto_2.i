@@ -2508,7 +2508,241 @@ extern __bank0 __bit __powerdown;
 extern __bank0 __bit __timeout;
 # 28 "C:/Program Files/Microchip/MPLABX/v5.45/packs/Microchip/PIC16Fxxx_DFP/1.2.33/xc8\\pic\\include\\xc.h" 2 3
 # 36 "Proyecto_2.c" 2
-# 48 "Proyecto_2.c"
+
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 1 3
+# 13 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef signed char int8_t;
+
+
+
+
+
+
+typedef signed int int16_t;
+
+
+
+
+
+
+
+typedef __int24 int24_t;
+
+
+
+
+
+
+
+typedef signed long int int32_t;
+# 52 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef unsigned char uint8_t;
+
+
+
+
+
+typedef unsigned int uint16_t;
+
+
+
+
+
+
+typedef __uint24 uint24_t;
+
+
+
+
+
+
+typedef unsigned long int uint32_t;
+# 88 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef signed char int_least8_t;
+
+
+
+
+
+
+
+typedef signed int int_least16_t;
+# 109 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef __int24 int_least24_t;
+# 118 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef signed long int int_least32_t;
+# 136 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef unsigned char uint_least8_t;
+
+
+
+
+
+
+typedef unsigned int uint_least16_t;
+# 154 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef __uint24 uint_least24_t;
+
+
+
+
+
+
+
+typedef unsigned long int uint_least32_t;
+# 181 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef signed char int_fast8_t;
+
+
+
+
+
+
+typedef signed int int_fast16_t;
+# 200 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef __int24 int_fast24_t;
+
+
+
+
+
+
+
+typedef signed long int int_fast32_t;
+# 224 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef unsigned char uint_fast8_t;
+
+
+
+
+
+typedef unsigned int uint_fast16_t;
+# 240 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef __uint24 uint_fast24_t;
+
+
+
+
+
+
+typedef unsigned long int uint_fast32_t;
+# 268 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef int32_t intmax_t;
+# 282 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdint.h" 3
+typedef uint32_t uintmax_t;
+
+
+
+
+
+
+typedef int16_t intptr_t;
+
+
+
+
+typedef uint16_t uintptr_t;
+# 37 "Proyecto_2.c" 2
+
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 1 3
+
+
+
+# 1 "C:/Program Files/Microchip/MPLABX/v5.45/packs/Microchip/PIC16Fxxx_DFP/1.2.33/xc8\\pic\\include\\__size_t.h" 1 3
+
+
+
+typedef unsigned size_t;
+# 4 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 2 3
+
+# 1 "C:/Program Files/Microchip/MPLABX/v5.45/packs/Microchip/PIC16Fxxx_DFP/1.2.33/xc8\\pic\\include\\__null.h" 1 3
+# 5 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 2 3
+
+
+
+
+
+
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdarg.h" 1 3
+
+
+
+
+
+
+typedef void * va_list[1];
+
+#pragma intrinsic(__va_start)
+extern void * __va_start(void);
+
+#pragma intrinsic(__va_arg)
+extern void * __va_arg(void *, ...);
+# 11 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 2 3
+# 43 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 3
+struct __prbuf
+{
+ char * ptr;
+ void (* func)(char);
+};
+# 85 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 3
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\conio.h" 1 3
+
+
+
+
+
+
+
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\errno.h" 1 3
+# 29 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\errno.h" 3
+extern int errno;
+# 8 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\conio.h" 2 3
+
+
+
+
+extern void init_uart(void);
+
+extern char getch(void);
+extern char getche(void);
+extern void putch(char);
+extern void ungetch(char);
+
+extern __bit kbhit(void);
+
+
+
+extern char * cgets(char *);
+extern void cputs(const char *);
+# 85 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 2 3
+
+
+
+extern int cprintf(char *, ...);
+#pragma printf_check(cprintf)
+
+
+
+extern int _doprnt(struct __prbuf *, const register char *, register va_list);
+# 180 "C:\\Program Files\\Microchip\\xc8\\v2.31\\pic\\include\\c90\\stdio.h" 3
+#pragma printf_check(vprintf) const
+#pragma printf_check(vsprintf) const
+
+extern char * gets(char *);
+extern int puts(const char *);
+extern int scanf(const char *, ...) __attribute__((unsupported("scanf() is not supported by this compiler")));
+extern int sscanf(const char *, const char *, ...) __attribute__((unsupported("sscanf() is not supported by this compiler")));
+extern int vprintf(const char *, va_list) __attribute__((unsupported("vprintf() is not supported by this compiler")));
+extern int vsprintf(char *, const char *, va_list) __attribute__((unsupported("vsprintf() is not supported by this compiler")));
+extern int vscanf(const char *, va_list ap) __attribute__((unsupported("vscanf() is not supported by this compiler")));
+extern int vsscanf(const char *, const char *, va_list) __attribute__((unsupported("vsscanf() is not supported by this compiler")));
+
+#pragma printf_check(printf) const
+#pragma printf_check(sprintf) const
+extern int sprintf(char *, const char *, ...);
+extern int printf(const char *, ...);
+# 38 "Proyecto_2.c" 2
+# 50 "Proyecto_2.c"
 int speed;
 int counter;
 char servo1;
@@ -2517,6 +2751,7 @@ char lec1;
 char lec2;
 char dato;
 char direccion;
+char flag;
 
 
 
@@ -2524,6 +2759,8 @@ char direccion;
 void setup(void);
 void escribir_EEPROM (char dato, char direccion);
 char leer_EEPROM (char direccion);
+void putch(char data);
+void comunicacion (void);
 
 
 
@@ -2603,6 +2840,18 @@ void __attribute__((picinterrupt(("")))) isr(void)
 
         }
 
+        else if (PORTBbits.RB2 == 0) {
+
+            if (flag == 0) {
+                PORTBbits.RB5 = 1;
+                flag = 1;
+            }
+            else {
+                PORTBbits.RB5 = 0;
+                flag = 0;
+            }
+        }
+
         else {
             PORTBbits.RB3 = 0;
             PORTBbits.RB4 = 0;
@@ -2629,19 +2878,26 @@ void main(void) {
 
     while (1)
     {
-        if (ADCON0bits.GO == 0){
-            if (ADCON0bits.CHS == 0) {
-                ADCON0bits.CHS = 1;
-            }
-            else if (ADCON0bits.CHS == 1) {
-                ADCON0bits.CHS = 2;
-            }
-            else if (ADCON0bits.CHS == 2) {
-                ADCON0bits.CHS = 0;
+
+        if (flag == 1) {
+            comunicacion();
+        }
+        else {
+            if (ADCON0bits.GO == 0){
+                if (ADCON0bits.CHS == 0) {
+                    ADCON0bits.CHS = 1;
+                }
+                else if (ADCON0bits.CHS == 1) {
+                    ADCON0bits.CHS = 2;
+                }
+                else if (ADCON0bits.CHS == 2) {
+                    ADCON0bits.CHS = 0;
+                }
+
+                _delay((unsigned long)((200)*(8000000/4000000.0)));
+                ADCON0bits.GO = 1;
             }
 
-            _delay((unsigned long)((200)*(8000000/4000000.0)));
-             ADCON0bits.GO = 1;
         }
 
     }
@@ -2659,12 +2915,12 @@ void setup(void) {
     ANSELH = 0X00;
 
     TRISA = 0X07;
-    TRISB = 0x03;
+    TRISB = 0x07;
     TRISD = 0X00;
 
-    IOCB = 0x03;
+    IOCB = 0x07;
     OPTION_REGbits.nRBPU = 0;
-    WPUB = 0x03;
+    WPUB = 0x07;
 
     PORTA = 0x00;
     PORTB = 0x00;
@@ -2734,6 +2990,21 @@ void setup(void) {
     TRISCbits.TRISC2 = 0;
     TRISCbits.TRISC1 = 0;
 
+
+    TXSTAbits.SYNC = 0;
+    TXSTAbits.BRGH = 1;
+
+    BAUDCTLbits.BRG16 = 1;
+
+    SPBRG = 207;
+    SPBRGH = 0;
+
+    RCSTAbits.SPEN = 1;
+    RCSTAbits.RX9 = 0;
+    RCSTAbits.CREN = 1;
+
+    TXSTAbits.TXEN = 1;
+
     return;
 }
 
@@ -2770,4 +3041,182 @@ char leer_EEPROM (char direccion) {
     char dato = EEDATA;
     return dato;
 
+}
+
+
+
+
+void putch(char data){
+    while (TXIF == 0);
+    TXREG = data;
+    return;
+}
+
+void comunicacion (void) {
+
+    _delay((unsigned long)((100)*(8000000/4000.0)));
+    printf("\rQue accion desea ejecutar?: \r");
+    _delay((unsigned long)((100)*(8000000/4000.0)));
+    printf("    (1) Controlar motores \r");
+    _delay((unsigned long)((100)*(8000000/4000.0)));
+    printf("    (2) EEPROM  \r");
+    _delay((unsigned long)((100)*(8000000/4000.0)));
+    printf("    (3) Terminar \r");
+
+    while (RCIF == 0);
+
+    if (RCREG == '1') {
+        _delay((unsigned long)((00)*(8000000/4000.0)));
+        printf("\r\rQue motor desea controlar:");
+        _delay((unsigned long)((100)*(8000000/4000.0)));
+        printf("\r\r (1)Servomotor 1");
+        _delay((unsigned long)((100)*(8000000/4000.0)));
+        printf("\r\r (2)Servomotor 2");
+        _delay((unsigned long)((100)*(8000000/4000.0)));
+        printf("\r\r (3)DC");
+
+        while (RCIF == 0);
+
+        if (RCREG == '1') {
+            _delay((unsigned long)((00)*(8000000/4000.0)));
+            printf("\r\rQue direccion:");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (a)Derecha");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (b)Izquierda");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (c)Centro");
+
+            while (RCIF == 0);
+
+            if (RCREG == 'a') {
+                CCPR1L = (250 >> 1) + 125;
+            }
+
+            else if (RCREG == 'b') {
+                CCPR1L = (0 >> 1) + 125;
+            }
+
+            else if (RCREG == 'c') {
+                CCPR1L = (127 >> 1) + 125;
+            }
+
+            else {
+                (0);
+            }
+        }
+
+        if (RCREG == '2') {
+            _delay((unsigned long)((00)*(8000000/4000.0)));
+            printf("\r\rQue altura del aleron:");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (a)Arriba");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (b)Abajo");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (c)Centro");
+
+            while (RCIF == 0);
+
+            if (RCREG == 'a') {
+                CCPR2L = (250 >> 1) + 125;
+            }
+
+            else if (RCREG == 'b') {
+                CCPR2L = (0 >> 1) + 125;
+            }
+
+            else if (RCREG == 'c') {
+                CCPR2L = (127 >> 1) + 125;
+            }
+
+            else {
+                (0);
+            }
+        }
+
+        if (RCREG == '3') {
+            _delay((unsigned long)((00)*(8000000/4000.0)));
+            printf("\r\rQue velocidad:");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (a)Ilegal");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (b)Parar");
+            _delay((unsigned long)((100)*(8000000/4000.0)));
+            printf("\r\r (c)Legal");
+
+            while (RCIF == 0);
+
+            if (RCREG == 'a') {
+                speed = 255;
+            }
+
+            else if (RCREG == 'b') {
+                speed = 0;
+            }
+
+            else if (RCREG == 'c') {
+                speed = 127;
+            }
+
+            else {
+                (0);
+            }
+        }
+
+    }
+
+    else if (RCREG == '2') {
+        _delay((unsigned long)((500)*(8000000/4000.0)));
+        printf("\r\rQue desea hacer en la memoria EEPROM:");
+        _delay((unsigned long)((100)*(8000000/4000.0)));
+        printf("\r\r (a)Grabar");
+        _delay((unsigned long)((100)*(8000000/4000.0)));
+        printf("\r\r (b)Leer");
+
+
+        while (RCIF == 0);
+
+        if (RCREG == 'a') {
+            PORTBbits.RB3 = 1;
+
+            escribir_EEPROM(servo1, 0x10);
+            escribir_EEPROM(servo2, 0x11);
+
+            _delay((unsigned long)((1000)*(8000000/4000.0)));
+            PORTBbits.RB3 = 0;
+        }
+
+        else if (RCREG == 'b') {
+            ADCON0bits.ADON = 0;
+            PORTBbits.RB4 = 1;
+
+            lec1 = leer_EEPROM(0x10);
+            lec2 = leer_EEPROM(0x11);
+
+            CCPR1L = (lec1 >> 1) + 125;
+            CCPR2L = (lec2 >> 1) + 125;
+
+            _delay((unsigned long)((2500)*(8000000/4000.0)));
+            ADCON0bits.ADON = 1;
+            PORTBbits.RB4 = 0;
+        }
+
+        else {
+            (0);
+        }
+
+    }
+
+    else if (RCREG == '3') {
+        _delay((unsigned long)((500)*(8000000/4000.0)));
+        printf("\r\rAdios\r");
+        flag = 0;
+        PORTBbits.RB5 = 0;
+    }
+
+    else {
+        (0);
+    }
+    return;
 }
