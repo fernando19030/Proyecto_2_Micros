@@ -3,12 +3,12 @@
 // Autor:    Fernando Arribas
 // Compilador:	pic-as (v2.31), MPLABX V5.45
 // 
-// Programa: Conversion de analago a digital con potenciometros y control de
-//           2 servos con PWM
-// Hardware: 2 servos en PORTC y 2 potenciometros en PORTA 
-//
+// Programa: Control de servos y dc con PWM, lectura/guardado en la EEPROM
+//           y comunicacion Eusart   
+// Hardware: 2 servos en PORTC, 3 potenciometros en PORTA, 2 motores Dc en PORTD
+//           y 3 pushbotons y 3 leds en PORTB
 // Creado: 25 may, 2021
-// Ultima modificacion: 25 may, 2021
+// Ultima modificacion: 04 jun, 2021
 
 // PIC16F887 Configuration Bit Settings
 
@@ -47,15 +47,15 @@
 //******************************************************************************
 // Variables
 //******************************************************************************
-int speed;
-int counter;
-char servo1;
-char servo2;
-char lec1;
+int speed;      //Velocidad de los DC's
+int counter;    //Contador del bit banging de los DC's
+char servo1;    //Control del servo en CCP1
+char servo2;    //Control del servo en CCP2
+char lec1;      //Lecturas
 char lec2;
-char dato;
-char direccion;
-char flag;
+char dato;      //Dato a guardar en la EEPROM
+char direccion; //Direccion de localidad en la EEPROM
+char flag;      //Bandera de activacion del Eusart
 
 //******************************************************************************
 // Prototipos de funciones
@@ -75,43 +75,44 @@ void __interrupt() isr(void)
     
         if  (ADCON0bits.CHS == 0) { //Verificamos el canal que se esta convirtiendo
             servo1 = ADRESH;                //Dependiendo el canal guardamos el resultado
-            CCPR1L = (servo1 >> 1) + 125;         
+            CCPR1L = (servo1 >> 1) + 125;   //Guardamos el resultado en CCP1      
             CCP1CONbits.DC1B1 = servo1 & 0b01;
             CCP1CONbits.DC1B0 = (servo1 >> 7);
         }
         
         else if (ADCON0bits.CHS == 1) {
             servo2 = ADRESH;                //Dependiendo el canal guardamos el resultado
-            CCPR2L = (servo2 >> 1) + 125;         
+            CCPR2L = (servo2 >> 1) + 125;   //Guardamos el resultado en CCP2      
             CCP2CONbits.DC2B1 = servo2 & 0b01;
             CCP2CONbits.DC2B0 = (servo2 >> 7);
             
         }
         
         else if (ADCON0bits.CHS == 2) {
-            speed = ADRESH; 
-            
+            speed = ADRESH;     //Guardamos el resultado en una variable para
+                                //poder controlar la velocidad del DC
         }
         PIR1bits.ADIF = 0;          //Reiniciamos la interupcion
     }
     
-    if (INTCONbits.T0IF ==1) // timer 0 interrupt flag
+    if (INTCONbits.T0IF ==1) 
     {
-        counter++;
-        INTCONbits.T0IF = 0;         // clear the flag
-        TMR0 = 131;           // reset the timer preset count
+        counter++;  //Creamos un contador que tenga de 0 a 255 un T = 1 seg
+        INTCONbits.T0IF = 0;         // Limpiamos la bandera
+        TMR0 = 131;           //reseteamos el timer
         
-        if (counter >= speed) {
-            PORTDbits.RD0 = 0;
+        //Proseguimos con el bit banging de los DC
+        if (counter >= speed) { //Comparamos el valor del ADC con el contador
+            PORTDbits.RD0 = 0;  //Si el contador es mayor los puertos son 0
             PORTDbits.RD1 = 0;
         }
         
-        else {
+        else {                  //Si es menor los puertos son 1
             PORTDbits.RD0 = 1;
             PORTDbits.RD1 = 1;
         }
         
-        if (counter == 256) {
+        if (counter == 256) {   //Reiniciamos el contador
             counter = 0;
         }
         
@@ -119,35 +120,35 @@ void __interrupt() isr(void)
     
     if (INTCONbits.RBIF == 1) {
         
-        if (PORTBbits.RB0 == 0) {
+        if (PORTBbits.RB0 == 0) {   //Guardado en la memoria
             PORTBbits.RB3 = 1;
             
-            escribir_EEPROM(servo1, 0x10);
+            escribir_EEPROM(servo1, 0x10);  //Comenzamos el guardado
             escribir_EEPROM(servo2, 0x11);
             
             __delay_ms(1000);
         }
         
-        else if (PORTBbits.RB1 == 0) {
+        else if (PORTBbits.RB1 == 0) {  //Lectura en la memoria
             
-            ADCON0bits.ADON = 0;
+            ADCON0bits.ADON = 0;    //Apgamos ADC para que no genere conflicto
             PORTBbits.RB4 = 1;
             
-            lec1 = leer_EEPROM(0x10);
-            lec2 = leer_EEPROM(0x11);
-            
+            lec1 = leer_EEPROM(0x10);   //Leemos y guardamos los datos en la 
+            lec2 = leer_EEPROM(0x11);   //Eeprom, luego los pasamos a los 
+                                        //modulos PWM
             CCPR1L = (lec1 >> 1) + 125;
             CCPR2L = (lec2 >> 1) + 125;
             
             __delay_ms(2500);
-            ADCON0bits.ADON = 1;
+            ADCON0bits.ADON = 1;        //Reanudamos las operaciones
                
         }
         
         else if (PORTBbits.RB2 == 0) {
             
-            if (flag == 0) {
-                PORTBbits.RB5 = 1;
+            if (flag == 0) {        //Activamos la bandera que permite funcionar 
+                PORTBbits.RB5 = 1;  //al Eusart
                 flag = 1;
             }
             else {
@@ -156,7 +157,7 @@ void __interrupt() isr(void)
             }
         }
         
-        else {
+        else {                  //Apagamos las leds
             PORTBbits.RB3 = 0;
             PORTBbits.RB4 = 0;
         }
@@ -183,10 +184,10 @@ void main(void) {
     while (1) 
     {
         
-        if (flag == 1) {
+        if (flag == 1) {    //Bandera que verifica si va a estar activo el Eusart
             comunicacion(); 
         }
-        else {
+        else {  //Si no esta activa la bandera funciona el ADC
             if (ADCON0bits.GO == 0){        //Cuando termine la conversion
                 if (ADCON0bits.CHS == 0) {  //Verificamos cual fue el ultimo canal convertido
                     ADCON0bits.CHS = 1;     //Despues cambiamos al siguiente canal
@@ -215,14 +216,14 @@ void main(void) {
 
 void setup(void) {
     //Configuracion de los puertos
-    ANSEL   = 0X07;       //Colocamos RA0 y RA1 como entradas analogicas
+    ANSEL   = 0X07;       //Colocamos RA0, RA1 y RA2 como entradas analogicas
     ANSELH  = 0X00;       
     
-    TRISA   = 0X07;       //Colocamos RA0 y RA1 como entradas y el resto del
-    TRISB   = 0x07;
+    TRISA   = 0X07;       //Colocamos RA0, RA1, RA2, RB0, RB1 y RB2 como entradas 
+    TRISB   = 0x07;       //y el resto como salidas
     TRISD   = 0X00;
     
-    IOCB    = 0x07;
+    IOCB    = 0x07;       //Activamos el weakpull up e interupt on change
     OPTION_REGbits.nRBPU = 0;
     WPUB    = 0x07;
     
@@ -369,7 +370,7 @@ void comunicacion (void) {
     
     while (RCIF == 0);  //Esperar a que se ingrese un dato de la computadora
     
-    if (RCREG == '1') { //Si presionamos 1 mandamos un cadena de caracteres
+    if (RCREG == '1') { //Si presionamos 1 preguntamos motor a controlar
         __delay_ms(00);
         printf("\r\rQue motor desea controlar:");
         __delay_ms(100);
@@ -381,7 +382,7 @@ void comunicacion (void) {
         
         while (RCIF == 0);  //Esperamos a que el usuario ingrese un dato
         
-        if (RCREG == '1') {
+        if (RCREG == '1') { //Preguntamos posicion del servo 1
             __delay_ms(00);
             printf("\r\rQue direccion:");
             __delay_ms(100);
@@ -410,7 +411,7 @@ void comunicacion (void) {
             }   
         }
         
-        if (RCREG == '2') {
+        if (RCREG == '2') { //Preguntamos posicion del servo 2
             __delay_ms(00);
             printf("\r\rQue altura del aleron:");
             __delay_ms(100);
@@ -439,7 +440,7 @@ void comunicacion (void) {
             }   
         }
         
-        if (RCREG == '3') {
+        if (RCREG == '3') { //Preguntamos velocidad de los DC's
             __delay_ms(00);
             printf("\r\rQue velocidad:");
             __delay_ms(100);
@@ -470,8 +471,8 @@ void comunicacion (void) {
         
     }
     
-    else if (RCREG == '2') {    //Si presionamos dos enviamos un caracter a PORTA
-        __delay_ms(500);    //Preguntamos el caracter
+    else if (RCREG == '2') {    //Si presionamos dos elegimos la memoria Eeprom
+        __delay_ms(500);        //Preguntamos el caracter
         printf("\r\rQue desea hacer en la memoria EEPROM:");
         __delay_ms(100);
         printf("\r\r (a)Grabar");
@@ -481,28 +482,28 @@ void comunicacion (void) {
         
         while (RCIF == 0);  //Esperamos a que el usuario ingrese un dato
         
-        if (RCREG == 'a') {
+        if (RCREG == 'a') {     //Si presionamos 'a' guardamos en la Eeprom
             PORTBbits.RB3 = 1;
             
-            escribir_EEPROM(servo1, 0x10);
+            escribir_EEPROM(servo1, 0x10);  //Escribimos en la memoria
             escribir_EEPROM(servo2, 0x11);
             
             __delay_ms(1000);
             PORTBbits.RB3 = 0;
         }
             
-        else if (RCREG == 'b') {
-            ADCON0bits.ADON = 0;
-            PORTBbits.RB4 = 1;
+        else if (RCREG == 'b') {    //Si presionamos 'b' leemos la Eeprom
+            ADCON0bits.ADON = 0;    //Apagamos la conversion analoga
+            PORTBbits.RB4 = 1;      //Avisamos que esta leyendo
             
-            lec1 = leer_EEPROM(0x10);
-            lec2 = leer_EEPROM(0x11);
+            lec1 = leer_EEPROM(0x10);   //Leemos y colocamos los datos en 
+            lec2 = leer_EEPROM(0x11);   //los servos
             
             CCPR1L = (lec1 >> 1) + 125;
             CCPR2L = (lec2 >> 1) + 125;
             
             __delay_ms(2500);
-            ADCON0bits.ADON = 1;
+            ADCON0bits.ADON = 1;    //Volvemos a reanudar las operaciones normales
             PORTBbits.RB4 = 0;
         }
             
@@ -512,10 +513,10 @@ void comunicacion (void) {
         
     }
     
-    else if (RCREG == '3') {    //Si presionamos dos enviamos un caracter a PORTB
-        __delay_ms(500);    //Preguntamos el caracter
+    else if (RCREG == '3') {    //Si presionamos 3 salimos del Eusart
+        __delay_ms(500);    
         printf("\r\rAdios\r");
-        flag = 0;
+        flag = 0;               //Apagamos el led y la bandera
         PORTBbits.RB5 = 0;
     } 
     
