@@ -47,10 +47,19 @@
 //******************************************************************************
 int speed;
 int counter;
+char servo1;
+char servo2;
+char lec1;
+char lec2;
+char dato;
+char direccion;
+
 //******************************************************************************
 // Prototipos de funciones
 //******************************************************************************
 void setup(void);           //Definimos las funciones que vamos a utilizar 
+void escribir_EEPROM (char dato, char direccion);
+char leer_EEPROM (char direccion);
 
 //******************************************************************************
 // Interupción
@@ -58,16 +67,20 @@ void setup(void);           //Definimos las funciones que vamos a utilizar
 void __interrupt() isr(void)
 {   
     if (PIR1bits.ADIF == 1) {
+    
         if  (ADCON0bits.CHS == 0) { //Verificamos el canal que se esta convirtiendo
-            CCPR1L = (ADRESH>>1) + 125;         //Dependiendo el canal guardamos el resultado
-            CCP1CONbits.DC1B1 = ADRESH & 0b01;
-            CCP1CONbits.DC1B0 = (ADRESH >> 7);
+            servo1 = ADRESH;                //Dependiendo el canal guardamos el resultado
+            CCPR1L = (servo1 >> 1) + 125;         
+            CCP1CONbits.DC1B1 = servo1 & 0b01;
+            CCP1CONbits.DC1B0 = (servo1 >> 7);
         }
         
         else if (ADCON0bits.CHS == 1) {
-            CCPR2L = (ADRESH>>1) + 125;
-            CCP2CONbits.DC2B1 = ADRESH & 0b01;
-            CCP2CONbits.DC2B0 = (ADRESH >> 7);
+            servo2 = ADRESH;                //Dependiendo el canal guardamos el resultado
+            CCPR2L = (servo2 >> 1) + 125;         
+            CCP2CONbits.DC2B1 = servo2 & 0b01;
+            CCP2CONbits.DC2B0 = (servo2 >> 7);
+            
         }
         
         else if (ADCON0bits.CHS == 2) {
@@ -80,10 +93,60 @@ void __interrupt() isr(void)
     if (INTCONbits.T0IF ==1) // timer 0 interrupt flag
     {
         counter++;
-//        PORTDbits.RD0 = ~PORTDbits.RD0;      // Toggle PORTB bit0 LED
         INTCONbits.T0IF = 0;         // clear the flag
         TMR0 = 131;           // reset the timer preset count
-  }
+        
+        if (counter >= speed) {
+            PORTDbits.RD0 = 0;
+            PORTDbits.RD1 = 0;
+        }
+        
+        else {
+            PORTDbits.RD0 = 1;
+            PORTDbits.RD1 = 1;
+        }
+        
+        if (counter == 256) {
+            counter = 0;
+        }
+        
+    }
+    
+    if (INTCONbits.RBIF == 1) {
+        
+        if (PORTBbits.RB0 == 0) {
+            PORTBbits.RB3 = 1;
+            
+            escribir_EEPROM(servo1, 0x10);
+            escribir_EEPROM(servo2, 0x11);
+            
+            __delay_ms(1000);
+        }
+        
+        else if (PORTBbits.RB1 == 0) {
+            
+            ADCON0bits.ADON = 0;
+            PORTBbits.RB4 = 1;
+            
+            lec1 = leer_EEPROM(0x10);
+            lec2 = leer_EEPROM(0x11);
+            
+            CCPR1L = (lec1 >> 1) + 125;
+            CCPR2L = (lec2 >> 1) + 125;
+            
+            __delay_ms(2500);
+            ADCON0bits.ADON = 1;
+               
+        }
+        
+        else {
+            PORTBbits.RB3 = 0;
+            PORTBbits.RB4 = 0;
+        }
+        
+        INTCONbits.RBIF = 0;
+        
+    }
     
 }
 
@@ -114,22 +177,8 @@ void main(void) {
             }
             
             __delay_us(200);            //Esperamos un tiempo para que la conversion
-            ADCON0bits.GO = 1;          //termine correctamente
+             ADCON0bits.GO = 1;          //termine correctamente
         } 
-        
-        if (counter >= speed) {
-            PORTDbits.RD0 = 0;
-            PORTDbits.RD1 = 0;
-        }
-        
-        else {
-            PORTDbits.RD0 = 1;
-            PORTDbits.RD1 = 1;
-        }
-        
-        if (counter == 256) {
-            counter = 0;
-        }
         
     }
 
@@ -146,9 +195,15 @@ void setup(void) {
     ANSELH  = 0X00;       
     
     TRISA   = 0X07;       //Colocamos RA0 y RA1 como entradas y el resto del
+    TRISB   = 0x03;
     TRISD   = 0X00;
-
+    
+    IOCB    = 0x03;
+    OPTION_REGbits.nRBPU = 0;
+    WPUB    = 0x03;
+    
     PORTA   = 0x00;
+    PORTB   = 0x00;
     PORTD   = 0x00;
     
     //Configuracion del Oscilador
@@ -161,9 +216,11 @@ void setup(void) {
     INTCONbits.GIE   = 1;       //Activamos las interupciones ADC 
     INTCONbits.PEIE  = 1;
     INTCONbits.T0IE  = 1;
+    INTCONbits.RBIE  = 1;
     PIE1bits.ADIE    = 1;
     
-    PIR1bits.ADIF    = 0;
+    PIR1bits.ADIF    = 0;       //Limíamos banderas
+    INTCONbits.RBIF  = 1;
     INTCONbits.T0IF  = 0;
     
     //Configuracion TMR0
@@ -174,7 +231,7 @@ void setup(void) {
     OPTION_REGbits.PS2 = 1;   // bits 2-0  PS2:PS0: Prescaler Rate Select bits
     OPTION_REGbits.PS1 = 0;
     OPTION_REGbits.PS0 = 1;
-    TMR0 = 131;             // preset for timer register
+    TMR0 = 131;               // preset for timer register
 
     
     //Configuracion ADC
@@ -183,7 +240,7 @@ void setup(void) {
     ADCON1bits.VCFG1    = 0;
     
     ADCON0bits.ADCS     = 0b10;    //Reloj de conversion como FOSC/32
-    ADCON0bits.CHS      = 0;    //Chanel 0
+    ADCON0bits.CHS      = 0;       //Chanel 0
     __delay_us(200);
     ADCON0bits.ADON     = 1;    //Encendemos el ADC
     __delay_us(200);
@@ -214,4 +271,39 @@ void setup(void) {
     TRISCbits.TRISC1    = 0;
     
     return;
+}
+
+//******************************************************************************
+//**************************Escribir en la EEPROM ******************************
+//******************************************************************************
+
+void escribir_EEPROM (char dato, char direccion) {
+    EEADR = direccion;      //Le indicamos en que localidad se va a guardar 
+    EEDAT = dato;           //Dato a guardar en la memoria
+    
+    INTCONbits.GIE = 0;     //Desactivamos las interupciones globales
+    
+    EECON1bits.EEPGD = 0;   //Apuntar hacia la data memory
+    EECON1bits.WREN = 1;    //Habilitamos la escritura
+    
+    EECON2 = 0x55;
+    EECON2 = 0xAA;
+    
+    EECON1bits.WR = 1;      //Iniciamos la escritura
+
+    while(PIR2bits.EEIF == 0);  //Esperamos a que termine la escritura
+    PIR2bits.EEIF = 0;      //Limpiamos la bandera
+    
+    EECON1bits.WREN = 0;    //Deshabilitamos la escritura
+}
+
+char leer_EEPROM (char direccion) {
+    EEADR = direccion;      //Le indicamos en que localidad se va a leer
+    
+    EECON1bits.EEPGD = 0;   //Apuntamos hacia la data memory
+    EECON1bits.RD = 1;      //Activamos la lectura 
+    
+    char dato = EEDATA;     //Guardamos lo que esta en la memoria en la variable
+    return dato;            //La operación regresa con una variable
+    
 }

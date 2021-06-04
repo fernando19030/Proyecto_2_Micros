@@ -2511,10 +2511,19 @@ extern __bank0 __bit __timeout;
 # 48 "Proyecto_2.c"
 int speed;
 int counter;
+char servo1;
+char servo2;
+char lec1;
+char lec2;
+char dato;
+char direccion;
+
 
 
 
 void setup(void);
+void escribir_EEPROM (char dato, char direccion);
+char leer_EEPROM (char direccion);
 
 
 
@@ -2522,16 +2531,20 @@ void setup(void);
 void __attribute__((picinterrupt(("")))) isr(void)
 {
     if (PIR1bits.ADIF == 1) {
+
         if (ADCON0bits.CHS == 0) {
-            CCPR1L = (ADRESH>>1) + 125;
-            CCP1CONbits.DC1B1 = ADRESH & 0b01;
-            CCP1CONbits.DC1B0 = (ADRESH >> 7);
+            servo1 = ADRESH;
+            CCPR1L = (servo1 >> 1) + 125;
+            CCP1CONbits.DC1B1 = servo1 & 0b01;
+            CCP1CONbits.DC1B0 = (servo1 >> 7);
         }
 
         else if (ADCON0bits.CHS == 1) {
-            CCPR2L = (ADRESH>>1) + 125;
-            CCP2CONbits.DC2B1 = ADRESH & 0b01;
-            CCP2CONbits.DC2B0 = (ADRESH >> 7);
+            servo2 = ADRESH;
+            CCPR2L = (servo2 >> 1) + 125;
+            CCP2CONbits.DC2B1 = servo2 & 0b01;
+            CCP2CONbits.DC2B0 = (servo2 >> 7);
+
         }
 
         else if (ADCON0bits.CHS == 2) {
@@ -2544,10 +2557,60 @@ void __attribute__((picinterrupt(("")))) isr(void)
     if (INTCONbits.T0IF ==1)
     {
         counter++;
-
         INTCONbits.T0IF = 0;
         TMR0 = 131;
-  }
+
+        if (counter >= speed) {
+            PORTDbits.RD0 = 0;
+            PORTDbits.RD1 = 0;
+        }
+
+        else {
+            PORTDbits.RD0 = 1;
+            PORTDbits.RD1 = 1;
+        }
+
+        if (counter == 256) {
+            counter = 0;
+        }
+
+    }
+
+    if (INTCONbits.RBIF == 1) {
+
+        if (PORTBbits.RB0 == 0) {
+            PORTBbits.RB3 = 1;
+
+            escribir_EEPROM(servo1, 0x10);
+            escribir_EEPROM(servo2, 0x11);
+
+            _delay((unsigned long)((1000)*(8000000/4000.0)));
+        }
+
+        else if (PORTBbits.RB1 == 0) {
+
+            ADCON0bits.ADON = 0;
+            PORTBbits.RB4 = 1;
+
+            lec1 = leer_EEPROM(0x10);
+            lec2 = leer_EEPROM(0x11);
+
+            CCPR1L = (lec1 >> 1) + 125;
+            CCPR2L = (lec2 >> 1) + 125;
+
+            _delay((unsigned long)((2500)*(8000000/4000.0)));
+            ADCON0bits.ADON = 1;
+
+        }
+
+        else {
+            PORTBbits.RB3 = 0;
+            PORTBbits.RB4 = 0;
+        }
+
+        INTCONbits.RBIF = 0;
+
+    }
 
 }
 
@@ -2578,27 +2641,9 @@ void main(void) {
             }
 
             _delay((unsigned long)((200)*(8000000/4000000.0)));
-            ADCON0bits.GO = 1;
+             ADCON0bits.GO = 1;
         }
 
-        if (counter >= speed) {
-            PORTDbits.RD0 = 0;
-            PORTDbits.RD1 = 0;
-        }
-
-        else {
-            PORTDbits.RD0 = 1;
-            PORTDbits.RD1 = 1;
-        }
-
-        if (counter == 256) {
-            counter = 0;
-        }
-
-        _delay((unsigned long)((500)*(8000000/4000.0)));
-        PORTAbits.RA3 = 1;
-        _delay((unsigned long)((500)*(8000000/4000.0)));
-        PORTAbits.RA3 = 0;
     }
 
     return;
@@ -2614,9 +2659,15 @@ void setup(void) {
     ANSELH = 0X00;
 
     TRISA = 0X07;
+    TRISB = 0x03;
     TRISD = 0X00;
 
+    IOCB = 0x03;
+    OPTION_REGbits.nRBPU = 0;
+    WPUB = 0x03;
+
     PORTA = 0x00;
+    PORTB = 0x00;
     PORTD = 0x00;
 
 
@@ -2629,9 +2680,11 @@ void setup(void) {
     INTCONbits.GIE = 1;
     INTCONbits.PEIE = 1;
     INTCONbits.T0IE = 1;
+    INTCONbits.RBIE = 1;
     PIE1bits.ADIE = 1;
 
     PIR1bits.ADIF = 0;
+    INTCONbits.RBIF = 1;
     INTCONbits.T0IF = 0;
 
 
@@ -2682,4 +2735,39 @@ void setup(void) {
     TRISCbits.TRISC1 = 0;
 
     return;
+}
+
+
+
+
+
+void escribir_EEPROM (char dato, char direccion) {
+    EEADR = direccion;
+    EEDAT = dato;
+
+    INTCONbits.GIE = 0;
+
+    EECON1bits.EEPGD = 0;
+    EECON1bits.WREN = 1;
+
+    EECON2 = 0x55;
+    EECON2 = 0xAA;
+
+    EECON1bits.WR = 1;
+
+    while(PIR2bits.EEIF == 0);
+    PIR2bits.EEIF = 0;
+
+    EECON1bits.WREN = 0;
+}
+
+char leer_EEPROM (char direccion) {
+    EEADR = direccion;
+
+    EECON1bits.EEPGD = 0;
+    EECON1bits.RD = 1;
+
+    char dato = EEDATA;
+    return dato;
+
 }
